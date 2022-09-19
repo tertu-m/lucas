@@ -234,7 +234,7 @@ library.update = function(self, new_track_states, autoplay)
             judgment_list[#judgment_list+1] = this_note
             this_note.visibility = "INVISIBLE"
          end
-      elseif self.first_note == note_idx and visibility == "INVISIBLE" or -visual_distance > before_distance
+      elseif self.first_note == note_idx and (visibility == "INVISIBLE" or -visual_distance > before_distance)
       then
          self.first_note = note_idx + 1
          goto next_note

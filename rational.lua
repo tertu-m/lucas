@@ -62,6 +62,8 @@ local function define_binary_operator(processor)
 end
 
 local rational_lib = {}
+local compute_add = function(an, bn, ad, bd) return an*bd+bn*ad, ad*bd end
+local compute_sub = function(an, bn, ad, bd) return an*bd-bn*ad, ad*bd end
 
 --Not sure if this is useful.
 rational_lib.normalize = function(a)
@@ -69,8 +71,8 @@ rational_lib.normalize = function(a)
    a.numerator, a.denominator = normalize(a.numerator, a.denominator)
 end
 rational_lib.mul = define_binary_operator(function(an, bn, ad, bd) return an*bn, ad*bd end)
-rational_lib.add = define_binary_operator(function(an, bn, ad, bd) return an*bd+bn*ad, ad*bd end)
-rational_lib.sub = define_binary_operator(function(an, bn, ad, bd) return an*bd-bn*ad, ad*bd end)
+rational_lib.add = define_binary_operator(compute_add)
+rational_lib.sub = define_binary_operator(compute_sub)
 rational_lib.div = define_binary_operator(function(an, bn, ad, bd)
       if bn == 0 then error("tried to divide by zero", 3) end; return an*bd, ad*bn end)
 rational_lib.negate = function(a)
@@ -78,6 +80,17 @@ rational_lib.negate = function(a)
    local numerator, denominator = normalize(-a.numerator, a.denominator)
    return c_rational(numerator, denominator)
 end
+rational_lib.add_in_place = function(a,b)
+    assert_rational(a); assert_rational(b)
+    a.numerator, a.denominator = normalize(
+        compute_add(a.numerator, b.numerator, a.denominator, b.denominator))
+end
+rational_lib.sub_as_number = function(a,b)
+    assert_rational(a); assert_rational(b)
+    local result_n, result_d = compute_sub(a.numerator, b.numerator, a.denominator, b.denominator)
+    return tonumber(result_n)/tonumber(result_d)
+end
+        
 rational_lib.new = function(numerator, denominator)
    assert(denominator ~= 0, "denominator may not be 0")
    assert(numerator == numerator and denominator == denominator, "nan is not an acceptable value")

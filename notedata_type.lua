@@ -17,7 +17,7 @@ typedef struct {
 ffi.cdef[[
 typedef struct note {
     note_type main_type;
-    uint8_t note_subtype;
+    uint32_t extra_data; //type dependent
     uint8_t judgment_group;
     uint8_t noteskin;
     uint8_t track;

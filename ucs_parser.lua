@@ -7,7 +7,7 @@ Also chunk headers are treated as not needing to be ordered.
 ]]
 local notedata = require "notedata_type"
 local ffi_util = require "ffi_util"
-local rational = require "rational"
+--local rational = require "rational"
 --local log = require "lucas_log"
 --this hasn't been written yet
 
@@ -27,7 +27,7 @@ end
 
 local note_definitions = {
    M={"HOLD_HEAD","CROSS","VISIBLE"},
-   H={"HOLD_BODY","CROSS","INVISIBLE"},
+   H={"HOLD_BODY","CROSS","VISIBLE"},
    W={"HOLD_TAIL","CROSS","VISIBLE"},
    X={"TAP","JUDGE","VISIBLE"},
    }
@@ -89,14 +89,14 @@ local header_tag_handlers = {
       if not is_integer(value) or value < 1 then
          return report_issue("illegal Split value: "..data)
       end
-      chunk_def.Split = rational(1,value)
+      chunk_def.Split = 1/value
       return true
    end;
 }
 
 --in case of a parse failure, this returns nil and a string representing why.
 library.load = function(path)
-   local beats = rational.new(0,1)
+   local beats = 0
    local beat_increment = nil
    local column_count = nil
    --I don't know how delays work. racerxdl implements them as taking up
@@ -203,7 +203,7 @@ library.load = function(path)
             current_chunk_timings[2] = current_chunk_header.Delay / current_chunk_timings[1]
             --to clarify what "row beats" are, they are the number of beats contributed by every UCS row in the chart.
             --this is needed so we can calculate timestamps.
-            current_chunk_timings[4] = beats:copy()
+            current_chunk_timings[4] = beats
             --and this is this chunk's delay in seconds, also needed so we can calculate timestamps
             current_chunk_timings[5] = current_chunk_header.Delay
             
@@ -215,7 +215,7 @@ library.load = function(path)
                --take the last chunk's start time, add the number of seconds all row beats took up, and finally add
                --that chunk's delay
                current_chunk_timings[3] = last_chunk_timings[3]
-                  + beats:sub(last_chunk_timings[4]):tonumber() * last_chunk_timings[1]
+                  + (beats - last_chunk_timings[4]) * last_chunk_timings[1]
                   + last_chunk_timings[5]
             else
                current_chunk_timings[3] = 0
@@ -248,8 +248,8 @@ library.load = function(path)
             end
 
             --this formula is (number of row beats since chunk started) * seconds per beat + (chunk delay in seconds)
-            local time_since_chunk_start = beats:sub(current_chunk_timings[4]):tonumber()*current_chunk_timings[1]+delay_seconds
-            local row = notedata.row(beats:tonumber()+delay_beats,time_since_chunk_start+current_chunk_timings[3])
+            local time_since_chunk_start = (beats - current_chunk_timings[4])*current_chunk_timings[1]+delay_seconds
+            local row = notedata.row(beats+delay_beats,time_since_chunk_start+current_chunk_timings[3])
             --These arrays are all transformed into LuaJIT FFI arrays at the end of the function, which are 0 indexed,
             --so just giving the number of rows before the new row is added as the index is correct.
             local new_row_index = #rows
@@ -269,20 +269,19 @@ library.load = function(path)
          end
          
          local note_column = 1
-         for empty_columns, note_char in line:gmatch("(%.*)([^%.])") do
-            note_column = note_column + #empty_columns
-            if note_char ~= "" then
+         for char in line:gmatch('(.)') do
+            if char ~= '.' then
                if row_index == nil then
                   row_index = create_row()
                end
-               local note_type, judge_mode, visibility = unpack(note_definitions[note_char])
+               local note_type, judge_mode, visibility = unpack(note_definitions[char])
                local note_struct = notedata.note(note_type, 0, 0, 0, note_column, -32768, judge_mode, visibility, row_index)
                notes[#notes+1] = note_struct
             end
-
+            note_column = note_column + 1
          end
          --do this now so the next line is at the correct beats number
-         beats = beats:add(beat_increment)
+         beats = beats + beat_increment 
          
          state = "steps"
       else
