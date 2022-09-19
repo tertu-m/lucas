@@ -1,5 +1,5 @@
 --a rational number library for luajit using the ffi.
---The numerator and denominator mu
+--This isn't in use anymore as it proved to be a little too slow, but it worked fine.
 
 local ffi = require "ffi"
 ffi.cdef [[

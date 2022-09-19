@@ -140,8 +140,13 @@ end
 
 --This function handles moving through the lists of scroll definitions and speed definitions.
 local function get_new_timing_def_index(now, current_def_index, defs_array, num_defs, rows_array)
-   while current_def_index < num_defs-1 and rows_array[defs_array[current_def_index].row_index].time_position < now do
-      current_def_index = current_def_index + 1
+   while current_def_index < num_defs-1 do
+      local temp_def_index = current_def_index + 1
+      if rows_array[defs_array[temp_def_index].row_index].time_position > now then
+         break
+      else
+         current_def_index = temp_def_index
+      end
    end
    return current_def_index
 end

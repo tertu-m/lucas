@@ -12,7 +12,7 @@ local function judgment_callback(miss, list)
 end
 
 function love.load()
-   ucs_data = {ucs_parser.load("test assets/d23.ucs")}
+   ucs_data = {ucs_parser.load("test assets/d18_plutz.ucs")}
    print("loaded ucs")
    print(unpack(ucs_data))
    love.graphics.setScissor(0,0,1600,900)
