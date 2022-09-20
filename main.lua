@@ -81,6 +81,7 @@ function love.update()
       print(calls.." calls", notes.." notes")
       update_idx = 1
    end]]
+   collectgarbage 'step'
 end
 
 --[[
@@ -122,18 +123,20 @@ function love.draw()
    end
    for i=1,#drawables do
       local drawable = drawables[i]
-      local column = drawable[2]
-      if drawable[1] == "TAP" or drawable[1] == "HOLD_HEAD"  then
-        setColor(column_color_lookup(note_colors, column))
-      else
-          setColor(hold_blue)
-      end
-      local x = column_offsets[column]
-      local y = math.floor(target_y+note_size*drawable[3]*speed_mod)
-      rect('fill', x, y, note_size, note_size)
-      if drawable[1] == "TAP" then
-        setColor(black)
-        rect('line', x, y, note_size, note_size)
+      if drawable then
+         local column = drawable[2]
+         if drawable[1] < 1 then
+            setColor(column_color_lookup(note_colors, column))
+         else
+            setColor(hold_blue)
+         end
+         local x = column_offsets[column]
+         local y = math.floor(target_y+note_size*drawable[3]*speed_mod)
+         rect('fill', x, y, note_size, note_size)
+         if drawable[1] == 0 then
+         setColor(black)
+         rect('line', x, y, note_size, note_size)
+         end
       end
    end
    setColor(1,1,1)

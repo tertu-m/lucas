@@ -254,17 +254,17 @@ library.update = function(self, new_track_states, autoplay)
             list_entry = {}
             drawables_list[current_drawable_idx] = list_entry
          end
-         list_entry[1] = this_note.main_type
-         list_entry[2] = this_note.track
-         list_entry[3] = visual_distance
+         list_entry[1] = tonumber(this_note.main_type)
+         list_entry[2] = tonumber(this_note.track)
+         list_entry[3] = tonumber(visual_distance)
          current_drawable_idx = current_drawable_idx + 1
       end
 
-      for i=current_drawable_idx,#drawables_list do
-         drawables_list[i] = nil
-      end
-
       ::next_note::
+   end
+
+   for i=current_drawable_idx,#drawables_list do
+      drawables_list[i] = nil
    end
 
    local notes_per_judgment_group = self.notes_per_judgment_group
