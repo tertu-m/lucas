@@ -3,6 +3,7 @@ function love.conf(t)
    t.window.title = "Lucas Player (test version)"
    t.window.width = 1600
    t.window.height = 900
+   t.window.highdpi = true
    t.window.vsync = 0
    t.console = true
    t.modules.physics = false
