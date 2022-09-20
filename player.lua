@@ -152,7 +152,7 @@ local function get_new_timing_def_index(now, current_def_index, defs_array, num_
 end
 
 library.update = function(self, new_track_states, autoplay)
-   collectgarbage()
+   --collectgarbage()
    local start_time = self.start_time
    if start_time == nil then
       error("start your players before you update them!",2)
