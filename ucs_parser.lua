@@ -94,6 +94,31 @@ local header_tag_handlers = {
    end;
 }
 
+--This calculates the beat and time position for a row, creates the row, and returns its index.
+local function create_row(rows, beats, current_chunk_timings, is_header_row)
+   local delay_beats, delay_seconds
+
+   --The way we do Pump delays is they are a spacing in beats inserted before the first row of the chunk.
+   --For that reason, if this is the header row, the space taken up by the delay should not be factored
+   --into the visual or time position.
+   if is_header_row then
+      delay_beats = current_chunk_timings[6]
+      delay_seconds = 0
+   else
+      delay_beats = current_chunk_timings[2]
+      delay_seconds = current_chunk_timings[5]
+   end
+
+   --this formula is (number of row beats since chunk started) * seconds per beat + (chunk delay in seconds)
+   local time_since_chunk_start = (beats - current_chunk_timings[4])*current_chunk_timings[1]+delay_seconds
+   local row = notedata.row(beats+delay_beats,time_since_chunk_start+current_chunk_timings[3])
+   --These arrays are all transformed into LuaJIT FFI arrays at the end of the function, which are 0 indexed,
+   --so just giving the number of rows before the new row is added as the index is correct.
+   local new_row_index = #rows
+   rows[new_row_index+1] = row
+   return new_row_index
+end
+
 --in case of a parse failure, this returns nil and a string representing why.
 library.load = function(path)
    local beats = 0
@@ -130,7 +155,7 @@ library.load = function(path)
 
    for line in io.lines(path) do
       --Whitespace with the exception of newlines does not appear to be significant in the UCS format.
-      line:gsub("%s","")
+      --line:gsub("%s","")
 
       line_number = line_number + 1
 
@@ -232,34 +257,9 @@ library.load = function(path)
          --this allows us to not create empty rows.
          local row_index
 
-         --This calculates the beat and time position for a row, creates the row, and returns its index.
-         local function create_row(is_header_row)
-            local delay_beats, delay_seconds
-
-            --The way we do Pump delays is they are a spacing in beats inserted before the first row of the chunk.
-            --For that reason, if this is the header row, the space taken up by the delay should not be factored
-            --into the visual or time position.
-            if is_header_row then
-               delay_beats = current_chunk_timings[6]
-               delay_seconds = 0
-            else
-               delay_beats = current_chunk_timings[2]
-               delay_seconds = current_chunk_timings[5]
-            end
-
-            --this formula is (number of row beats since chunk started) * seconds per beat + (chunk delay in seconds)
-            local time_since_chunk_start = (beats - current_chunk_timings[4])*current_chunk_timings[1]+delay_seconds
-            local row = notedata.row(beats+delay_beats,time_since_chunk_start+current_chunk_timings[3])
-            --These arrays are all transformed into LuaJIT FFI arrays at the end of the function, which are 0 indexed,
-            --so just giving the number of rows before the new row is added as the index is correct.
-            local new_row_index = #rows
-            rows[new_row_index+1] = row
-            return new_row_index
-         end
-
          --scroll defs hold the information required to handle BPM changes (and stops) at runtime
          if not output_scroll_def_for_this_chunk then
-            local def_row_index = create_row(true)
+            local def_row_index = create_row(rows, beats, current_chunk_timings, true)
             if current_chunk_timings[5] == 0 then
                row_index = def_row_index
             end
@@ -268,11 +268,12 @@ library.load = function(path)
             output_scroll_def_for_this_chunk = true
          end
          
-         local note_column = 1
-         for char in line:gmatch('(.)') do
+         for note_column=1,current_mode_columns do
+
+            local char = line:sub(note_column,note_column)
             if char ~= '.' then
                if row_index == nil then
-                  row_index = create_row()
+                  row_index = create_row(rows, beats, current_chunk_timings)
                end
                local note_type, judge_mode, visibility = unpack(note_definitions[char])
                local note_struct = notedata.note(note_type, 0, 0, 0, note_column, -32768, judge_mode, visibility, row_index)
