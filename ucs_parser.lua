@@ -155,7 +155,7 @@ library.load = function(path)
 
    for line in io.lines(path) do
       --Whitespace with the exception of newlines does not appear to be significant in the UCS format.
-      line:gsub("%s","")
+      --line:gsub("%s","")
 
       line_number = line_number + 1
 
@@ -208,6 +208,8 @@ library.load = function(path)
             
          state = "header"
       elseif is_step_line(line) then
+         --strip the trailing newline. If this is not done, the gmatch thing done below doesn't work.
+         line = line:sub(1,-2)
 
          if state == "header" or state == nil then
             if not (current_mode_columns and seen_format_tag) then
@@ -248,7 +250,7 @@ library.load = function(path)
             beat_increment = current_chunk_header.Split
          end
 
-         if #line ~= current_mode_columns+1 then
+         if #line ~= current_mode_columns then
             return fail("Step line has "..#line.." columns, should have "..current_mode_columns)
          end
 
@@ -273,10 +275,7 @@ library.load = function(path)
                if row_index == nil then
                   row_index = create_row(rows, beats, current_chunk_timings)
                end
-               local note_definition = note_definitions[char]
-               local note_type = note_definition[1]
-               local judge_mode = note_definition[2]
-               local visibility = note_definition[3]
+               local note_type, judge_mode, visibility = unpack(note_definitions[char])
                local note_struct = notedata.note(note_type, 0, 0, 0, note_column, -32768, judge_mode, visibility, row_index)
                notes[#notes+1] = note_struct
             end

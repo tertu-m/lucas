@@ -151,14 +151,6 @@ local function get_new_timing_def_index(now, current_def_index, defs_array, num_
    return current_def_index
 end
 
-local function is_new_judgment_target(now, use_earliest_note, new_note_time, old_note_time)
-   if use_earliest_note then
-      return new_note_time < old_note_time
-   else
-      return math.abs(new_note_time - now) < math.abs(old_note_time - now)
-   end
-end
-
 library.update = function(self, new_track_states, autoplay)
    local start_time = self.start_time
    if start_time == nil then
@@ -179,6 +171,13 @@ library.update = function(self, new_track_states, autoplay)
    local track_edges = {}
 
    local use_earliest_note = self.use_earliest_note
+   local function is_new_judgment_target(new_note_time, old_note_time)
+      if use_earliest_note then
+         return new_note_time < old_note_time
+      else
+         return math.abs(new_note_time - now) < math.abs(old_note_time - now)
+      end
+   end
 
    --For taps, among other things, we care whether the track was changed this update.
    for track, state in ipairs(track_states) do
