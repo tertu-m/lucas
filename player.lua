@@ -140,7 +140,7 @@ end
 
 --This function handles moving through the lists of scroll definitions and speed definitions.
 local function get_new_timing_def_index(now, current_def_index, defs_array, num_defs, rows_array)
-   while current_def_index < num_defs-1 do
+   while current_def_index < num_defs-2 do
       local temp_def_index = current_def_index + 1
       if rows_array[defs_array[temp_def_index].row_index].time_position > now then
          break
@@ -152,6 +152,7 @@ local function get_new_timing_def_index(now, current_def_index, defs_array, num_
 end
 
 library.update = function(self, new_track_states, autoplay)
+   collectgarbage()
    local start_time = self.start_time
    if start_time == nil then
       error("start your players before you update them!",2)
@@ -171,13 +172,14 @@ library.update = function(self, new_track_states, autoplay)
    local track_edges = {}
 
    local use_earliest_note = self.use_earliest_note
-   local function is_new_judgment_target(new_note_time, old_note_time)
-      if use_earliest_note then
-         return new_note_time < old_note_time
-      else
-         return math.abs(new_note_time - now) < math.abs(old_note_time - now)
-      end
-   end
+
+   --local function is_new_judgment_target(new_note_time, old_note_time)
+   --   if use_earliest_note then
+   --      return new_note_time < old_note_time
+   --   else
+   --      return math.abs(new_note_time - now) < math.abs(old_note_time - now)
+   --   end
+   --end
 
    --For taps, among other things, we care whether the track was changed this update.
    for track, state in ipairs(track_states) do

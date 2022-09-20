@@ -275,7 +275,12 @@ library.load = function(path)
                if row_index == nil then
                   row_index = create_row(rows, beats, current_chunk_timings)
                end
-               local note_type, judge_mode, visibility = unpack(note_definitions[char])
+
+               local note_definition = note_definitions[char]
+               local note_type = note_definition[1]
+               local judge_mode = note_definition[2]
+               local visibility = note_definition[3]
+
                local note_struct = notedata.note(note_type, 0, 0, 0, note_column, -32768, judge_mode, visibility, row_index)
                notes[#notes+1] = note_struct
             end
